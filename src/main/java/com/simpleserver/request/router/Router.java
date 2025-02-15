@@ -2,26 +2,31 @@ package com.simpleserver.request.router;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.simpleserver.handler.Handler;
+import com.simpleserver.middleware.Middleware;
 import com.simpleserver.request.Request;
+
+import lombok.Getter;
+import lombok.Setter;
 
 // import com.simpleserver.handler.Handler;
 
+@Getter
+@Setter
 public class Router {
     private Map<String, Boolean> statics = new ConcurrentHashMap<>();
     private Map<Pattern, String> dynamics = new ConcurrentHashMap<>();
-    private Map<String, Map<String, Handler>> routes = new ConcurrentHashMap<>();
+    private Map<String, Map<String, Deque<Middleware>>> routes = new ConcurrentHashMap<>();
 
-    public Map<String, Map<String, Handler>> getRoutes() {
-        return routes;
-    }
+    private Middleware errorHandler = null;
 
-    public void add(String path) {
+    private void add(String path) {
         if (path.contains("<")) {
             /**
              * String path = "/users/{id}/posts/{postId}";
@@ -40,19 +45,24 @@ public class Router {
 
     }
 
-    public void register(String method, String path, Handler handler) {
+    public void register(String method, String path, Middleware middleware) {
         add(path);
 
-        Map<String, Handler> routeRef = routes.getOrDefault(path, new ConcurrentHashMap<>());
+        var routeRef = routes.getOrDefault(path, new ConcurrentHashMap<>());
 
-        routeRef.put(method, handler);
+        var queue = routeRef.getOrDefault(method, new ConcurrentLinkedDeque<>());
+        queue.addLast(middleware);
+
+        if (!routeRef.containsKey(method)) {
+            routeRef.put(method, queue);
+        }
 
         if (!routes.containsKey(path)) {
             routes.put(path, routeRef);
         }
     }
 
-    public Handler setParams(Request req) {
+    public Deque<Middleware> setParams(Request req) {
         String path = req.getPath();
         String method = req.getMethod();
 
@@ -83,7 +93,7 @@ public class Router {
         return null;
     }
 
-    public ArrayList<String> extractIds(String target) {
+    private ArrayList<String> extractIds(String target) {
         System.err.println(target);
         /* <([^/>]+)> this extracts every word more than 1 length with <> */
         Matcher keys = Pattern.compile("<([^/>]+)>").matcher(target);

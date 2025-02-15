@@ -4,6 +4,13 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.simpleserver.utils.HttpStatus;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class Response {
     private String version;
     private int status;
@@ -17,44 +24,22 @@ public class Response {
         this.client = client;
     }
 
-    public String getVersion() {
-        return this.version;
-    }
-
-    public int getStatus() {
-        return this.status;
-    }
-
-    public String getMessage() {
-        return this.message;
-    }
-
-    public String getBody() {
-        return this.body;
-    }
-
-    public Map<String, String> getHeaders() {
-        return this.headers;
-    }
-
-    public void setBody(String body) {
-        this.body = body;
-    }
-
     public void setHeader(String key, String value) {
         this.headers.put(key, value);
     }
 
     public void setStatus(int status) {
         this.status = status;
+        setMessage(HttpStatus.fromCodeToString(status));
     }
 
     public String toString() {
-        return this.version + " " + this.status + " " + this.message + "\r\n" + this.body;
+        return this.version + " " + this.status + " " + this.message + "\r\n" + this.getHeaders() + "\r\n\r\n" +
+                this.body;
     }
 
     public byte[] toBytes() {
-        return this.toString().getBytes();
+        return buildResponse().getBytes();
     }
 
     public void send() {
@@ -83,6 +68,21 @@ public class Response {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String buildResponse() {
+        StringBuilder response = new StringBuilder();
+        String statusLine = this.version + " " + this.status + " " + this.message;
+        response.append(statusLine).append("\r\n");
+
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            response.append(entry.getKey()).append(": ").append(entry.getValue()).append("\r\n");
+        }
+
+        response.append("\r\n");
+        response.append(body);
+
+        return response.toString();
     }
 
 }

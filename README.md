@@ -4,6 +4,7 @@ A lightweight HTTP server built in Java 11, inspired by Express.js. It supports:
 
 - **Routing** with dynamic path parameters
 - **Multithreading** for handling multiple requests concurrently
+- **Middlewares**: Support extension of functionalities using middlewares
 - **Basic request parsing** for query params, headers, and request body
 
 ## 🚀 Features
@@ -11,6 +12,7 @@ A lightweight HTTP server built in Java 11, inspired by Express.js. It supports:
 - **Lightweight & Fast**: Minimal dependencies, runs efficiently.
 - **Dynamic Routing**: Supports routes with parameters (`/users/<id>`).
 - **Multithreading**: Handles multiple client connections concurrently.
+- **Middlewares**: Support extension of functionalities using middlewares
 - **Basic HTTP Methods**: Supports GET, POST, PUT, DELETE, etc.
 
 

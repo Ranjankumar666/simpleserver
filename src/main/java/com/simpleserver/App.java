@@ -4,18 +4,25 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import com.simpleserver.client.Client;
-import com.simpleserver.handler.Handler;
+import com.simpleserver.middleware.Middleware;
 import com.simpleserver.request.router.Router;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Hello world!
  */
+@Getter
+@Setter
 public final class App {
     private volatile int port = 80;
     private volatile String host = "localhost";
@@ -24,46 +31,7 @@ public final class App {
     private ServerSocket socket = null;
     private Router router = new Router();
     private Executor threadManager = Executors.newCachedThreadPool();
-
-    public Router getRouter() {
-        return router;
-    }
-
-    public int getPort() {
-        return this.port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public String getHost() {
-        return this.host;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public ServerSocket getSocket() {
-        return socket;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public Map<String, String> getHeaders() {
-        return this.headers;
-    }
-
-    public Map<String, Map<String, Handler>> getRoutes() {
-        return router.getRoutes();
-    }
-
-    public void setHeaders(Map<String, String> headers) {
-        this.headers = headers;
-    }
+    private Deque<Middleware> middlewares = new ConcurrentLinkedDeque<>();
 
     public App() {
     }
@@ -73,17 +41,27 @@ public final class App {
         this.setHost(host);
     }
 
-    public App route(String method, String path, Handler handler) {
-        router.register(method, path, handler);
+    public App route(String method, String path, Middleware middleware) {
+        router.register(method, path, middleware);
         return this;
     }
 
-    public App all(String path, Handler handler) {
+    public App use(Middleware middleware) {
+        middlewares.push(middleware);
+        return this;
+    }
+
+    public App all(String path, Middleware middleware) {
         String[] methods = new String[] { "GET", "PUT", "POST", "PATCH", "DELETE" };
 
         for (String method : methods) {
-            router.register(method, path, handler);
+            router.register(method, path, middleware);
         }
+        return this;
+    }
+
+    public App error(Middleware middleware) {
+        router.setErrorHandler(middleware);
         return this;
     }
 
@@ -146,12 +124,6 @@ public final class App {
             }
         }));
 
-    }
-
-    public void error(Handler handler) {
-        Map<String, Handler> mp = new ConcurrentHashMap<>();
-        mp.put("1", handler);
-        this.router.getRoutes().put("ERROR", mp);
     }
 
 }

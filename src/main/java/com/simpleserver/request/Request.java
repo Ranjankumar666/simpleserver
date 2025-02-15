@@ -11,6 +11,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.json.JSONObject;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class Request {
     private String method;
     private String path;
@@ -28,6 +33,29 @@ public class Request {
         BufferedReader reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
         String line = reader.readLine();
 
+        parseBasic(line);
+
+        // Headers
+        parseHeaders(reader);
+
+        parseBody(reader);
+    }
+
+    public void setMethod(String method) {
+        this.method = method.toUpperCase();
+    }
+
+    private void parseHeaders(BufferedReader reader) throws IOException {
+        String line = reader.readLine();
+
+        while (line != null && !line.isEmpty()) {
+            String[] hParts = line.split(":");
+            this.headers.put(hParts[0].trim(), hParts[1].trim());
+            line = reader.readLine();
+        }
+    }
+
+    private void parseBasic(String line) {
         String[] parts = line.split(" ");
         setMethod(parts[0].trim());
         setPath(parts[1].trim());
@@ -43,22 +71,19 @@ public class Request {
                 this.queryString.put(parts4[0], parts4[1]);
             }
         }
+    }
 
-        // Headers
-        line = reader.readLine();
-        int contentLength = 0;
+    private void parseBody(BufferedReader reader) throws IOException {
+        String contentLengthVal = getHeaders().get("Content-Length");
 
-        while (line != null && !line.isEmpty()) {
-            String[] hParts = line.split(":");
-            this.headers.put(hParts[0].trim(), hParts[1].trim());
-            line = reader.readLine();
-
-            if (hParts[0].trim().equalsIgnoreCase("Content-Length")) {
-                contentLength = Integer.parseInt(hParts[1].trim());
-            }
-
+        if (contentLengthVal == null) {
+            contentLengthVal = getHeaders().get("content-length");
         }
 
+        if (contentLengthVal == null)
+            return;
+
+        int contentLength = Integer.parseInt(contentLengthVal);
         if (contentLength > 0) {
             char[] bodyChars = new char[contentLength];
             int readChars = reader.read(bodyChars, 0, contentLength);
@@ -67,67 +92,9 @@ public class Request {
             }
             parseBody();
         }
-
-        // reader.close();
     }
 
-    public String getMethod() {
-        return this.method;
-    }
-
-    public String getPath() {
-        return this.path;
-    }
-
-    public String getVersion() {
-        return this.version;
-    }
-
-    public Socket getClient() {
-        return this.client;
-    }
-
-    public StringBuilder getBody() {
-        return body;
-    }
-
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
-
-    public Map<String, String> getQueryString() {
-        return queryString;
-    }
-
-    public JSONObject getJson() {
-        return json;
-    }
-
-    public HashMap<String, String> getForm() {
-        return form;
-    }
-
-    public Map<String, String> getParams() {
-        return params;
-    }
-
-    public void setMethod(String method) {
-        this.method = method.toUpperCase();
-    }
-
-    public void setParams(Map<String, String> params) {
-        this.params = params;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public void parseBody() {
+    private void parseBody() {
         String contentType = headers.getOrDefault("Content-Type", "");
 
         switch (contentType.toLowerCase()) {
