@@ -65,6 +65,15 @@ public class Response {
         }
     }
 
+    public void send(String body) {
+        setBody(body);
+        try {
+            client.getOutputStream().write(toBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void send(int status, String body) {
         setStatus(status);
         setBody(body);
