@@ -33,7 +33,7 @@ cd simpleserver
 ### Build the Project
 
 ```sh
-mvn clean mvn clean compile
+mvn clean compile
 ```
 
 ## 🚀 Usage
@@ -46,7 +46,7 @@ mvn exec:java
 
 ### Define Routes
 
-You can define routes inside the `App.java` file:
+You can define routes inside the `Main.java` file for testing:
 
 ```java
 app.route("POST", "/hello", (req, res) -> {
@@ -54,10 +54,27 @@ app.route("POST", "/hello", (req, res) -> {
 });
 ```
 
+### Middlewares
+
+The order of execution middlewares goes from top to bottom. Please add global middlewares at top. You need call `next.execute()` for chaining.
+
+```java
+app.route("GET", "/hello", (req, res, next) -> {
+    res.send("Hello, World!");
+    next.execute();
+});
+
+app.use((req, res, next) -> {
+    res.send("Hello, World!");
+    next.execute();
+});
+
+```
+
 ### Dynamic Routes with Parameters
 
 ```java
-app.route("POST","/users/<id>", (req, res) -> {
+app.route("POST","/users/<id>", (req, res, next) -> {
     String userId = req.getParams("id");
     res.send("User ID: " + userId);
 });
@@ -66,7 +83,7 @@ app.route("POST","/users/<id>", (req, res) -> {
 ### Handling POST Requests
 
 ```java
-server.route("POST", "/submit", (req, res) -> {
+server.route("POST", "/submit", (req, res, next) -> {
     String body = req.getBody();
     res.send("Received: " + body);
 });
@@ -82,6 +99,7 @@ server.route("POST", "/submit", (req, res) -> {
 - Response.java -> Handles HTTP responses.
 - Router.java   -> Manages route handling.
 - Client.java  -> Spawns a thread for each client request
+- Middleware.js -> Lambda function to customize the request and the response
 
 ```
 
