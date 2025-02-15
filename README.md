@@ -115,4 +115,3 @@ server.route("POST", "/submit", (req, res, next) -> {
 
 1. Add static file sharing
 2. Multipart form support
-3. Middleware support
