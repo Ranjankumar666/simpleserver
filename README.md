@@ -3,7 +3,6 @@
 A lightweight HTTP server built in Java 11, inspired by Express.js. It supports:
 
 - **Routing** with dynamic path parameters
-- **Middleware support** for request processing
 - **Multithreading** for handling multiple requests concurrently
 - **Basic request parsing** for query params, headers, and request body
 
@@ -32,7 +31,7 @@ cd simpleserver
 ### Build the Project
 
 ```sh
-mvn clean compile
+mvn clean mvn clean compile
 ```
 
 ## 🚀 Usage
