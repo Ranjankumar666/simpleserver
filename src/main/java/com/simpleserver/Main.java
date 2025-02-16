@@ -6,6 +6,11 @@ public class Main {
 
         app.set("Content-Type", "application/json");
 
+        app.use((req, res, next) -> {
+            System.out.println("I must run first");
+            next.execute();
+        });
+
         app.error((req, res, next) -> {
             res.send(404, "Path" + req.getPath() + " doesn't exists on Server");
         });
