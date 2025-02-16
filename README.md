@@ -1,117 +1,114 @@
-# SimpleServer
+# SimpleServer: A Lightweight Java HTTP Server
 
-A lightweight HTTP server built in Java 11, inspired by Express.js. It supports:
+## Overview
 
-- **Routing** with dynamic path parameters
-- **Multithreading** for handling multiple requests concurrently
-- **Middlewares**: Support extension of functionalities using middlewares
-- **Basic request parsing** for query params, headers, and request body
+SimpleServer is a lightweight HTTP server implemented in Java using raw sockets. It provides routing, middleware support, and request/response handling similar to Express.js in Node.js. The server supports dynamic route parameters, middleware chaining, and custom error handling.
 
-## 🚀 Features
+## Features
 
-- **Lightweight & Fast**: Minimal dependencies, runs efficiently.
-- **Dynamic Routing**: Supports routes with parameters (`/users/<id>`).
-- **Multithreading**: Handles multiple client connections concurrently.
-- **Middlewares**: Support extension of functionalities using middlewares
-- **Basic HTTP Methods**: Supports GET, POST, PUT, DELETE, etc.
+- **Custom HTTP Server**: Built using raw sockets (`ServerSocket` and `Socket`).
+- **Routing System**: Supports static and dynamic routes (`/test/<id>`).
+- **Middleware Support**: Implements a middleware system for request processing.
+- **Custom Error Handling**: Allows defining a global error handler.
+- **Threaded Client Handling**: Uses a thread pool to handle multiple client connections concurrently.
 
+## Project Structure
 
-## 📦 Installation
-
-### Prerequisites
-
-- **Java 11+** installed
-- **Apache Maven** installed
-
-### Clone the Repository
-
-```sh
-git clone https://github.com/Ranjankumar666/simpleserver.git
-cd simpleserver
+```
+com/simpleserver/
+│── App.java            # Core server class
+│── Main.java           # Entry point for running the server
+│
+├── client/
+│   ├── Client.java     # Handles individual client connections
+│
+├── middleware/
+│   ├── Middleware.java # Functional interface for middleware
+│   ├── Next.java       # Functional interface for middleware chaining
+│
+├── request/
+│   ├── Request.java    # Parses incoming HTTP requests
+│   ├── router/
+│   │   ├── Router.java # Routing logic (static and dynamic routes)
+│
+├── response/
+│   ├── Response.java   # Builds and sends HTTP responses
+│
+├── utils/
+│   ├── HttpStatus.java # Enum for HTTP status codes
 ```
 
-### Build the Project
+## How It Works
 
-```sh
-mvn clean compile
-```
+### Server Initialization (`Main.java`)
 
-## 🚀 Usage
+- Creates an instance of `App`
+- Registers global headers (`Content-Type: application/json`)
+- Defines middleware for logging
+- Defines routes (`GET /test/<id>`)
+- Starts listening for requests
 
-### Run the Server
+### Request Processing Flow
 
-```sh
-mvn exec:java
-```
+1. **Client connects** → `Client.java`
+2. **Request is parsed** → `Request.java`
+3. **Middlewares execute** → `Middleware.java`
+4. **Route handler runs** → `Router.java`
+5. **Response is sent** → `Response.java`
 
-### Define Routes
+### Middleware Execution
 
-You can define routes inside the `Main.java` file for testing:
+Middleware functions are stored in a `Deque<Middleware>` and executed sequentially using:
 
 ```java
-app.route("POST", "/hello", (req, res) -> {
-    res.send("Hello, World!");
-});
+middleware.handle(req, res, () -> executeMiddlewares(req, res, middlewares));
 ```
 
-### Middlewares
+### Dynamic Route Matching
 
-The order of execution middlewares goes from top to bottom. Please add global middlewares at top. You need call `next.execute()` for chaining.
+- URLs like `/test/<id>/post/<postId>` are mapped to regex patterns.
+- Extracted parameters are set in `Request.params`.
+
+## Usage
+
+### 1. Add Routes
 
 ```java
 app.route("GET", "/hello", (req, res, next) -> {
-    res.send("Hello, World!");
-    next.execute();
+    res.send(200, "Hello World!");
 });
+```
 
+### 2. Add Middleware
+
+```java
 app.use((req, res, next) -> {
-    res.send("Hello, World!");
+    System.out.println("Middleware executed");
     next.execute();
 });
-
 ```
 
-### Dynamic Routes with Parameters
+### 3. Start the Server
 
 ```java
-app.route("POST","/users/<id>", (req, res, next) -> {
-    String userId = req.getParams("id");
-    res.send("User ID: " + userId);
-});
+app.listen(8080);
 ```
 
-### Handling POST Requests
+## Running Locally
 
-```java
-server.route("POST", "/submit", (req, res, next) -> {
-    String body = req.getBody();
-    res.send("Received: " + body);
-});
+To build and run the server locally, use the following Maven commands:
+
+```sh
+mvn clean compile
+mvn exec:java
 ```
 
+## Next Steps
 
+- Add **HTTPS support**
+- Implement **WebSocket support**
+- Introduce **JSON serialization utilities**
 
-## 🏗 Architecture
+## License
 
-```plaintext
-- App.java      -> Entry point, sets up the server and routes and Server implementating and threadinh
-- Request.java  -> Parses HTTP requests.
-- Response.java -> Handles HTTP responses.
-- Router.java   -> Manages route handling.
-- Client.java  -> Spawns a thread for each client request
-- Middleware.js -> Lambda function to customize the request and the response
-
-```
-
-## 🛠 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature-name`)
-3. Commit your changes (`git commit -m 'Add feature'`)
-4. Push to the branch (`git push origin feature-name`)
-5. Open a Pull Request
-
-## 📜 In Progress
-
-1. Add static file sharing
-2. Multipart form support
+This project is open-source and available under the MIT License.
