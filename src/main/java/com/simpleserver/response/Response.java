@@ -79,6 +79,10 @@ public class Response {
             response.append(entry.getKey()).append(": ").append(entry.getValue()).append("\r\n");
         }
 
+        if (!headers.containsKey("Content-Length")) {
+            response.append("Content-Length").append(":").append(body.getBytes().length).append("\r\n");
+        }
+
         response.append("\r\n");
         response.append(body);
 

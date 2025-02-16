@@ -4,8 +4,10 @@ public class Main {
     public static void main(String[] args) {
         App app = new App();
 
+        app.set("Content-Type", "application/json");
+
         app.error((req, res, next) -> {
-            res.send(404, "Something went wrong!!!");
+            res.send(404, "Path" + req.getPath() + " doesn't exists on Server");
         });
 
         // app.all("/test/<id>/post/<postId>", (req, res, next) -> {

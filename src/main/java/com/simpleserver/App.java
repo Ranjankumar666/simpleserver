@@ -51,6 +51,11 @@ public final class App {
         return this;
     }
 
+    public App set(String key, String value) {
+        headers.put(key, value);
+        return this;
+    }
+
     public App all(String path, Middleware middleware) {
         String[] methods = new String[] { "GET", "PUT", "POST", "PATCH", "DELETE" };
 

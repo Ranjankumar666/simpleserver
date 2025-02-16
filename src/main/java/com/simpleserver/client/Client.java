@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Map;
 
 import com.simpleserver.App;
 import com.simpleserver.middleware.Middleware;
@@ -38,19 +39,31 @@ public class Client implements Runnable {
 
         Request req = new Request(client);
         Response res = new Response(server.getVersion(), client);
-        Deque<Middleware> handlers = server.getRouter().setParams(req);
 
+        // default headers
+        for (Map.Entry<String, String> entry : server.getHeaders().entrySet()) {
+            res.setHeader(entry.getKey(), entry.getValue());
+        }
+
+        Deque<Middleware> serverMiddlewares = server.getMiddlewares();
+        Deque<Middleware> handlers = server.getRouter().getHandlers(req);
         Deque<Middleware> middlewares = new ArrayDeque<>();
+
+        if (handlers == null)
+            handlers = new ArrayDeque<>();
+        if (serverMiddlewares == null)
+            serverMiddlewares = new ArrayDeque<>();
+
+        middlewares.addAll(serverMiddlewares);
         middlewares.addAll(handlers);
-        middlewares.addAll(server.getMiddlewares());
 
         if (!middlewares.isEmpty()) {
             executeMiddlewares(req, res, middlewares);
-            client.close();
         } else {
             handleError(req, res);
-            client.close();
         }
+
+        client.close();
 
     }
 

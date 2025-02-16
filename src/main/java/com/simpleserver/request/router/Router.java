@@ -62,7 +62,7 @@ public class Router {
         }
     }
 
-    public Deque<Middleware> setParams(Request req) {
+    public Deque<Middleware> getHandlers(Request req) {
         String path = req.getPath();
         String method = req.getMethod();
 
