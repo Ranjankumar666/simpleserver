@@ -81,6 +81,8 @@ public class Response {
 
         if (!headers.containsKey("Content-Length")) {
             response.append("Content-Length").append(":").append(body.getBytes().length).append("\r\n");
+            // response.append("Transfer-Encoding").append(":").append("chunked").append("\r\n");
+
         }
 
         response.append("\r\n");

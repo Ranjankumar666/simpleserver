@@ -26,7 +26,7 @@ import lombok.Setter;
 public final class App {
     private volatile int port = 80;
     private volatile String host = "localhost";
-    private final String version = "HTTP/1.0";
+    private final String version = "HTTP/1.1";
     private Map<String, String> headers = new ConcurrentHashMap<>();
     private ServerSocket socket = null;
     private Router router = new Router();

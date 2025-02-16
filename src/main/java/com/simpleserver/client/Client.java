@@ -39,12 +39,33 @@ public class Client implements Runnable {
 
         Request req = new Request(client);
         Response res = new Response(server.getVersion(), client);
+        var reqHeaders = req.getHeaders();
+
+        if (!reqHeaders.containsKey("Host") && !reqHeaders.containsKey("host")) {
+            res.send(400, "Bad Request: Missing Host Header");
+            client.close();
+            return;
+        }
 
         // default headers
         for (Map.Entry<String, String> entry : server.getHeaders().entrySet()) {
             res.setHeader(entry.getKey(), entry.getValue());
         }
 
+        handleMiddlewareExecution(req, res);
+        String connection = reqHeaders.get("Connection");
+
+        if (connection == null) {
+            connection = reqHeaders.get("connection");
+        }
+        if (connection != null && connection.equalsIgnoreCase("close")) {
+            client.close();
+            return;
+        }
+
+    }
+
+    private void handleMiddlewareExecution(Request req, Response res) throws IOException {
         Deque<Middleware> serverMiddlewares = server.getMiddlewares();
         Deque<Middleware> handlers = server.getRouter().getHandlers(req);
         Deque<Middleware> middlewares = new ArrayDeque<>();
@@ -62,8 +83,6 @@ public class Client implements Runnable {
         } else {
             handleError(req, res);
         }
-
-        client.close();
 
     }
 

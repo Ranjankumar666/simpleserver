@@ -33,11 +33,8 @@ public class Request {
         BufferedReader reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
         String line = reader.readLine();
 
-        parseBasic(line);
-
-        // Headers
+        parseStatusLine(line);
         parseHeaders(reader);
-
         parseBody(reader);
     }
 
@@ -55,7 +52,7 @@ public class Request {
         }
     }
 
-    private void parseBasic(String line) {
+    private void parseStatusLine(String line) {
         String[] parts = line.split(" ");
         setMethod(parts[0].trim());
         setPath(parts[1].trim());
